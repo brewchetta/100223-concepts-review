@@ -4,7 +4,7 @@ from flask import Flask, request, make_response, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
-from models import db, Gift
+from models import db, Gift, Receiver
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -15,15 +15,18 @@ migrate = Migrate(app, db)
 
 db.init_app(app)
 
+
 @app.get('/')
 def index():
     return "Hello world"
 
 
+# ### GIFTS ### #
+
 @app.get('/gifts')
 def all_gifts():
     all_gifts = Gift.query.all()
-    gift_dicts = [ g.to_dict() for g in all_gifts ]
+    gift_dicts = [ g.to_dict(rules=("-receiver", "-pretty_print")) for g in all_gifts ]
     return make_response( jsonify( gift_dicts ), 200 )
 
 
@@ -51,6 +54,22 @@ def post_gift():
         return {"message": f"{e}"}, 406
     
 
+@app.patch('/gifts/<int:id>')
+def patch_gift(id):
+    try:
+        data = request.json
+        Gift.query.filter(Gift.id == id).update(data)
+        db.session.commit()
+
+        found_gift = Gift.query.filter(Gift.id == id).first()
+
+        return found_gift.to_dict(), 202
+
+    except Exception as e:
+        print(e)
+        return {"message": f"{e}"}, 406
+
+
 @app.delete('/gifts/<int:id>')
 def delete_gift(id):
     try:
@@ -63,6 +82,15 @@ def delete_gift(id):
     except:
 
         return {"message": "Not found"}, 404
+    
+
+# ### RECEIVERS ### #
+
+@app.get('/receivers')
+def all_receivers():
+    receivers_list = Receiver.query.all()
+    receiver_dicts = [ r.to_dict() for r in receivers_list ]
+    return receiver_dicts, 200
 
 
 if __name__ == '__main__':
