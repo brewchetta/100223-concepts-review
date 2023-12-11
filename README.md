@@ -14,6 +14,8 @@
 
 - How do we validate data using `@validates` and other techniques?
 
+- What are `serializer_rules` and how can we use them to shape data?
+
 - How do we create relationships between models?
 
 - What is `association_proxy` and how can we use it to generate a many-to-many?
